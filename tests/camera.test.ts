@@ -49,4 +49,26 @@ describe('camera lifecycle', () => {
     await camera.start(1); callback?.(100); await new Promise<void>((resolve) => { const wait = () => runStarted ? resolve() : queueMicrotask(wait); wait(); }); camera.stop(); resolveRun({ output: { data: [.9] } }); await Promise.resolve(); await Promise.resolve();
     expect(predictions).toBe(0);
   });
+
+  it('does not report live when video playback is rejected', async () => {
+    const stream = streamMock(); const statuses: string[] = [];
+    const listeners = new Map<string, () => void>();
+    const video = {
+      srcObject: null as MediaStream | null, muted: false, readyState: 3, currentTime: 0,
+      play: async () => { throw new Error('autoplay blocked'); }, pause: () => undefined,
+      addEventListener: (name: string, callback: () => void) => listeners.set(name, callback),
+      removeEventListener: (name: string) => { listeners.delete(name); },
+    } as unknown as HTMLVideoElement;
+    const camera = new CameraController(video, {
+      devices: { getUserMedia: async () => stream.stream },
+      getRoundGeneration: () => 1,
+      loadModels: async () => runtimeMock(),
+      onStatus: (status) => statuses.push(status),
+    });
+    await camera.start(1);
+    expect(camera.active).toBe(false);
+    expect(statuses.at(-1)).toBe('Camera unavailable • Retry or Cancel');
+    expect(stream.stopped()).toBe(1);
+    expect(listeners.size).toBe(0);
+  });
 });

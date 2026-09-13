@@ -220,6 +220,10 @@ export class CameraController {
     await this.start(generation);
   }
 
+  onVisibilityChange(hidden: boolean): void {
+    if (hidden) this.stop('Camera paused while tab is hidden');
+  }
+
   isCurrent(generation: number): boolean {
     const attempt = this.activeAttempt;
     return !!attempt && attempt.generation === generation && this.getRoundGeneration() === generation && !attempt.cancelled;
@@ -328,10 +332,14 @@ export class CameraController {
       return;
     }
     attempt.lastVideoTime = this.video.currentTime;
-    const now = Number.isFinite(frameTime) ? frameTime : this.now();
+    // MediaPipe receives the monotonic animation timestamp. Prediction
+    // consumers use the injected wall clock so an awaited classifier cannot
+    // report an old sample as if it completed now.
+    const detectorTimestamp = Number.isFinite(frameTime) ? frameTime : this.now();
+    const sampleTime = this.now();
     let result: RawDetectionResult;
     try {
-      result = attempt.runtime.detector.detectForVideo(this.video as unknown as HTMLVideoElement, now);
+      result = attempt.runtime.detector.detectForVideo(this.video as unknown as HTMLVideoElement, detectorTimestamp);
     } catch {
       this.failAttempt(attempt, 'Recognition stopped • Retry or Cancel');
       return;
@@ -342,12 +350,12 @@ export class CameraController {
     }
     const hands = resultHands(result);
     if (hands.length === 0) {
-      this.dispatchPrediction(null, 0, now, generation);
+      this.dispatchPrediction(null, 0, sampleTime, generation);
       this.schedule(attempt);
       return;
     }
     attempt.inFlight = true;
-    void this.runInference(attempt, epoch, generation, hands, now);
+    void this.runInference(attempt, epoch, generation, hands, sampleTime);
   }
 
   private async runInference(
@@ -371,9 +379,17 @@ export class CameraController {
         this.disposeAttempt(attempt);
         return;
       }
+      const completionTime = this.now();
+      if (!Number.isFinite(completionTime)) return;
+      if (completionTime - now > 500) {
+        // A stale result may clear the current hold, but it must never advance
+        // it. A null sample preserves accepted earlier steps in the reducer.
+        this.dispatchPrediction(null, 0, completionTime, generation);
+        return;
+      }
       const scores: OrtTensor | undefined = output[outputName];
       const prediction = classifyScores(scores?.data);
-      this.dispatchPrediction(prediction?.label ?? null, prediction?.score ?? 0, now, generation);
+      this.dispatchPrediction(prediction?.label ?? null, prediction?.score ?? 0, completionTime, generation);
     } catch {
       if (this.isCurrentAttempt(attempt) && epoch === attempt.epoch) this.failAttempt(attempt, 'Recognition stopped • Retry or Cancel');
       else this.disposeAttempt(attempt);

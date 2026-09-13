@@ -51,7 +51,7 @@ export interface OrtModule {
 export interface ModelRuntime {
   detector: HandDetector;
   session: OrtSession;
-  ort: OrtModule;
+  ort: Pick<OrtModule, 'Tensor'>;
   generation: number;
 }
 
