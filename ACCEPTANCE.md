@@ -43,7 +43,7 @@ Audio tests use mocked Web Audio contexts and timers to check unavailable audio,
 
 ## Art and provenance
 
-The user requires GPT-image-2.5. The available image tool cannot select or verify that model, and the user declined a substitute. No images were generated. The game therefore retains an explicit temporary-greybox label.
+The user requires GPT-image-2.5. The available image tool cannot select or verify that model, and the user declined a substitute. No GPT-image-2.5 runtime art was generated. `art-candidates/` contains separate studies from a side conversation; their notes say they were generated with the built-in tool, with the backend model unverified. They remain separate from runtime integration and do not constitute art approval. The game therefore retains an explicit temporary-greybox label.
 
 The manifest records target 256×256 fighter canvases, fixed facing and feet pivots, frame counts, relative paths, and charge/release VFX mappings. All items remain `pending-gpt-image-2.5`. Dimensions, alpha, trimming, frame ordering, detailed appearance, preview sheets, and final sprite integration are pending; target metadata is not validation evidence.
 
@@ -93,5 +93,9 @@ The reviewed changes were separated into focused commits on `codex/basic-battle-
 | `16f141e` | Battle presentation and motion handling | 3 presentation tests passed. |
 | `7ccaf83` | Synthesized audio lifecycle tests | 7 audio tests passed. |
 | `13fd86a` | Pending runtime asset metadata | 1 asset test passed. |
+| `a9126d0` | Initial acceptance report | Whitespace check and independent documentation review passed. |
+| `e96b95e` | Visual handoff references (9 files) | Reference handoff material recorded; no runtime change. |
+| `b3cfacf` | Legacy references (31 files) | Legacy/reference material recorded; no runtime change. |
+| `032ad71` | Separate art candidates (8 files) | Candidate studies recorded separately; no runtime integration or approval. |
 
-Every batch passed `git diff --cached --check` before committing. This acceptance record is the final documentation batch. The reference bundles and unreviewed `art-candidates/` remain untracked and were excluded from these commits.
+Every batch passed `git diff --cached --check` before committing. This acceptance record is the final documentation batch, preserving the prior six-commit history above. The later three commits record the remaining 48 files locally on `codex/basic-battle-review-fixes`; `handoff-references/`, `source-reference/`, and `art-candidates/` are now tracked and remain excluded from the production build.
