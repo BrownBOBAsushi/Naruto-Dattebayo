@@ -1,4 +1,10 @@
+import type { HoldState } from './cv/core';
+
 export type CalloutText = 'ROUND' | 'FIGHT';
+
+export function resetHoldState(): HoldState {
+  return { label: null, startedAt: null, progress: 0, completed: false };
+}
 
 export interface HitstopClock { hitstopAt: number; hitstopUntil: number }
 
