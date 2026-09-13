@@ -1,0 +1,28 @@
+{
+  "status": "temporary-greybox",
+  "note": "Runtime art is pending the approved GPT-image-2.5 generation. Renderer uses procedural greybox until these relative paths receive validated original assets.",
+  "items": [
+    {"id":"sasuke-idle","file":"sprites/sasuke/idle_{00..03}.png","frames":4,"dimensions":[256,256],"fps":8,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"sasuke-cast","file":"sprites/sasuke/cast_{00..02}.png","frames":3,"dimensions":[256,256],"fps":12,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"sasuke-dash","file":"sprites/sasuke/dash_{00..03}.png","frames":4,"dimensions":[256,256],"fps":14,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"sasuke-hit","file":"sprites/sasuke/hit_{00..01}.png","frames":2,"dimensions":[256,256],"fps":10,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"sasuke-victory","file":"sprites/sasuke/victory_{00..01}.png","frames":2,"dimensions":[256,256],"fps":8,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"sasuke-defeat","file":"sprites/sasuke/defeat_{00..01}.png","frames":2,"dimensions":[256,256],"fps":6,"facing":"right","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-idle","file":"sprites/naruto/idle_{00..03}.png","frames":4,"dimensions":[256,256],"fps":8,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-cast","file":"sprites/naruto/cast_{00..02}.png","frames":3,"dimensions":[256,256],"fps":12,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-dash","file":"sprites/naruto/dash_{00..03}.png","frames":4,"dimensions":[256,256],"fps":14,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-hit","file":"sprites/naruto/hit_{00..01}.png","frames":2,"dimensions":[256,256],"fps":10,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-victory","file":"sprites/naruto/victory_{00..01}.png","frames":2,"dimensions":[256,256],"fps":8,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"naruto-defeat","file":"sprites/naruto/defeat_{00..01}.png","frames":2,"dimensions":[256,256],"fps":6,"facing":"left","pivot":[128,244],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"fireball-vfx","file":"vfx/fireball/frame_{00..03}.png","frames":4,"dimensions":[192,192],"fps":16,"facing":"right","pivot":[96,96],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"chidori-vfx","file":"vfx/chidori/frame_{00..03}.png","frames":4,"dimensions":[192,192],"fps":16,"facing":"right","pivot":[96,96],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"rasengan-vfx","file":"vfx/rasengan/frame_{00..03}.png","frames":4,"dimensions":[192,192],"fps":16,"facing":"left","pivot":[96,96],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"impact-vfx","file":"vfx/impact/frame_{00..03}.png","frames":4,"dimensions":[192,192],"fps":16,"facing":"varies","pivot":[96,96],"trimmed":true,"source":"pending-gpt-image-2.5"},
+    {"id":"valley-background","file":"backgrounds/valley-of-the-end.png","frames":1,"dimensions":[1920,720],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"},
+    {"id":"water-surface","file":"backgrounds/water-surface.png","frames":1,"dimensions":[1920,240],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"},
+    {"id":"segmented-hp","file":"ui/segmented-hp.png","frames":1,"dimensions":[480,56],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"},
+    {"id":"ending-victory","file":"endings/victory.png","frames":1,"dimensions":[1920,720],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"},
+    {"id":"ending-defeat","file":"endings/defeat.png","frames":1,"dimensions":[1920,720],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"},
+    {"id":"ending-secret","file":"endings/secret-clash.png","frames":1,"dimensions":[1920,720],"fps":0,"facing":"n/a","pivot":[0,0],"trimmed":false,"source":"pending-gpt-image-2.5"}
+  ]
+}
