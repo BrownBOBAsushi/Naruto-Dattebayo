@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "sequenceMode": "three_sign_training",
+  "sequenceNote": "These are simplified game input combinations, not canonical hand-seal sequences. Rasenshuriken does not canonically require hand seals.",
+  "jutsus": [
+    {
+      "id": "fireball",
+      "name": "Fireball Jutsu",
+      "type": "fire",
+      "handSigns": [
+        "serpent",
+        "ram",
+        "tiger"
+      ],
+      "completionSoundtrack": "./assets/audio/sasuke-fireball.mp3"
+    },
+    {
+      "id": "hiding_in_ash",
+      "name": "Hiding in Ash Jutsu",
+      "type": "fire",
+      "handSigns": [
+        "serpent",
+        "rat",
+        "bird"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "chidori",
+      "name": "Chidori",
+      "type": "lightning",
+      "handSigns": [
+        "ox",
+        "hare",
+        "monkey"
+      ],
+      "completionSoundtrack": "./assets/audio/sasuke-chidori.mp3"
+    },
+    {
+      "id": "emotion_waves",
+      "name": "Emotion Waves",
+      "type": "lightning",
+      "handSigns": [
+        "ram",
+        "serpent",
+        "horse"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "waterdragon",
+      "name": "Water Dragon",
+      "type": "water",
+      "handSigns": [
+        "ox",
+        "monkey",
+        "bird"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "rasenshuriken",
+      "name": "Rasenshuriken",
+      "type": "wind",
+      "handSigns": [
+        "ram",
+        "horse",
+        "bird"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "casting_net",
+      "name": "Casting Net",
+      "type": "wind",
+      "handSigns": [
+        "tiger",
+        "serpent",
+        "bird"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "flying_stones",
+      "name": "Flying Stones",
+      "type": "earth",
+      "handSigns": [
+        "ox",
+        "ram",
+        "dog"
+      ],
+      "completionSoundtrack": null
+    },
+    {
+      "id": "stone_column_spear",
+      "name": "Stone Column Spear",
+      "type": "earth",
+      "handSigns": [
+        "tiger",
+        "ox",
+        "dog"
+      ],
+      "completionSoundtrack": null
+    }
+  ]
+}

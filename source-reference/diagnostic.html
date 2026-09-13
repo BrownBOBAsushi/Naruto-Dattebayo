@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seal webcam feasibility probe</title>
+    <link rel="stylesheet" href="./diagnostics.css" />
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+      body { position: fixed; inset: 0; height: 100vh; height: 100dvh; }
+      body .shell { position: absolute; width: 1100px; margin: 0; padding: 20px; transform-origin: top left; }
+      .shell .two-col { grid-template-columns: 1.1fr .9fr; }
+      .shell .trial-config { grid-template-columns: repeat(4,minmax(0,1fr)) auto; }
+      .shell .table-wrap { overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <p class="eyebrow">Throwaway feasibility probe</p>
+        <h1>Webcam seal check</h1>
+        <p class="lede">A small diagnostic surface for testing real hand landmark inference before building the game.</p>
+      </header>
+
+      <section class="notice" aria-label="Scope">
+        <strong>Scope</strong>
+        <span>Nothing is recorded or uploaded. The camera is used only while Start is active.</span>
+      </section>
+
+      <section class="grid two-col">
+        <article class="panel camera-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">01 / camera</p>
+              <h2>Live diagnostic</h2>
+            </div>
+            <span id="camera-status" class="status" data-tone="neutral">Stopped</span>
+          </div>
+          <div class="video-wrap">
+            <video id="camera" autoplay muted playsinline aria-label="Live camera preview"></video>
+            <div id="video-placeholder" class="video-placeholder">Load the model, then allow camera access.</div>
+          </div>
+          <div class="actions">
+            <button id="load-model" type="button">Load model</button>
+            <button id="start-camera" type="button" disabled>Start camera</button>
+            <button id="stop-camera" type="button" class="quiet" disabled>Stop</button>
+          </div>
+          <p id="model-status" class="status-line" role="status">Model not loaded.</p>
+          <p id="error-status" class="error-line" role="alert" hidden></p>
+        </article>
+
+        <article class="panel readout-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">02 / signal</p>
+              <h2>Recognition readout</h2>
+            </div>
+            <span id="inference-latency" class="metric">— ms</span>
+          </div>
+          <dl class="readout">
+            <div><dt>Prediction</dt><dd id="prediction">—</dd></div>
+            <div><dt>Score</dt><dd id="prediction-score">—</dd></div>
+            <div><dt>Hands</dt><dd id="hand-count">0</dd></div>
+            <div><dt>Recent labels</dt><dd id="recent-labels">—</dd></div>
+          </dl>
+          <div class="reference">
+            <img id="seal-reference" alt="Reference seal" />
+            <div>
+              <p class="eyebrow">Pose reference</p>
+              <p id="reference-name">Choose a target below.</p>
+              <p class="muted">Keep the full hand in frame. The preview is mirrored for comfort; detection uses the raw video.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel trial-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">03 / trial</p>
+            <h2>Hold and sequence check</h2>
+          </div>
+          <span id="trial-status" class="status" data-tone="neutral">Idle</span>
+        </div>
+        <div class="trial-config">
+          <label>Target seal
+            <select id="target-seal"></select>
+          </label>
+          <label>Sequence 1
+            <select class="sequence-choice"></select>
+          </label>
+          <label>Sequence 2
+            <select class="sequence-choice"></select>
+          </label>
+          <label>Sequence 3
+            <select class="sequence-choice"></select>
+          </label>
+          <button id="start-single-trial" type="button" class="quiet" disabled>Start single-sign trial</button>
+          <button id="start-trial" type="button" disabled>Start sequence trial</button>
+        </div>
+        <div class="hold-track" aria-label="Hold progress">
+          <div id="hold-progress" class="hold-progress"></div>
+        </div>
+        <p id="hold-status" class="status-line">Hold the active seal for about 350 ms.</p>
+        <div class="trial-metrics">
+          <span>Successes <strong id="success-count">0</strong></span>
+          <span>Elapsed <strong id="trial-elapsed">—</strong></span>
+          <span>Timeout <strong>15 s</strong></span>
+        </div>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">04 / log</p>
+            <h2>Trial results</h2>
+          </div>
+          <button id="export-log" type="button" class="quiet">Export JSON</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sequence</th><th>Result</th><th>Elapsed</th><th>Mean inference</th></tr></thead>
+            <tbody id="trial-log"><tr><td colspan="4" class="muted">No trials yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>Source model: Jutsu Hero seal classifier · Browser-only probe · No persistence</footer>
+    </main>
+    <script type="module" src="./src/app.js"></script>
+    <script>
+      // The original diagnostics remain available as a fitted, non-scrolling screen.
+      const diagnosticScreen = document.querySelector('.shell');
+      function fitDiagnostics() {
+        const width = document.body.clientWidth;
+        const height = document.body.clientHeight;
+        const scale = Math.min(width / 1100, height / diagnosticScreen.offsetHeight);
+        diagnosticScreen.style.transform = `scale(${scale})`;
+        diagnosticScreen.style.left = `${(width - 1100 * scale) / 2}px`;
+        diagnosticScreen.style.top = `${(height - diagnosticScreen.offsetHeight * scale) / 2}px`;
+      }
+      new ResizeObserver(fitDiagnostics).observe(diagnosticScreen);
+      window.addEventListener('resize', fitDiagnostics);
+      fitDiagnostics();
+    </script>
+  </body>
+</html>

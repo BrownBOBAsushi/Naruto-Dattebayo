@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seal webcam feasibility probe</title>
+    <style>
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #111313;
+  color: #f4f0e8;
+  --bg: #111313;
+  --panel: #1b1e1e;
+  --line: #343a38;
+  --muted: #9fa9a3;
+  --accent: #e8bc64;
+  --danger: #ee8b7b;
+  --good: #7dcc9b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at 80% -10%, #28322c 0, var(--bg) 40rem); }
+.shell { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 36px; }
+header { max-width: 700px; margin-bottom: 24px; }
+h1, h2, p { margin: 0; }
+h1 { margin-top: 8px; font-size: clamp(2.4rem, 6vw, 5rem); line-height: .95; letter-spacing: -.06em; }
+h2 { font-size: 1.25rem; letter-spacing: -.025em; }
+.lede { color: var(--muted); margin-top: 18px; font-size: 1.05rem; max-width: 56ch; }
+.eyebrow { color: var(--accent); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; }
+.notice, .panel { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 16px; }
+.notice { display: flex; gap: 12px; padding: 13px 16px; color: var(--muted); font-size: .88rem; margin-bottom: 16px; }
+.notice strong { color: var(--accent); }
+.grid { display: grid; gap: 16px; }
+.two-col { grid-template-columns: 1.1fr .9fr; }
+.panel { padding: 20px; }
+.panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+.panel-heading .eyebrow { margin-bottom: 7px; }
+.status, .metric { border: 1px solid var(--line); border-radius: 99px; padding: 6px 10px; font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.status[data-tone="good"] { color: var(--good); border-color: #3c7356; }
+.status[data-tone="bad"] { color: var(--danger); border-color: #78423b; }
+.video-wrap { position: relative; overflow: hidden; aspect-ratio: 16 / 10; border-radius: 11px; background: #0b0d0d; border: 1px solid var(--line); }
+video { width: 100%; height: 100%; display: block; object-fit: cover; transform: scaleX(-1); }
+.video-placeholder { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; color: var(--muted); font-size: .9rem; }
+.video-wrap.is-live .video-placeholder { display: none; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+button, select { border: 1px solid #56625b; border-radius: 9px; color: var(--bg); background: var(--accent); padding: 9px 12px; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.quiet { background: transparent; color: var(--muted); border-color: var(--line); }
+.status-line, .error-line { color: var(--muted); font-size: .8rem; margin-top: 12px; min-height: 1em; }
+.error-line { color: var(--danger); }
+.readout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.readout div { padding: 15px; background: var(--panel); }
+dt { color: var(--muted); font-size: .72rem; margin-bottom: 7px; }
+dd { margin: 0; font-size: 1.16rem; font-variant-numeric: tabular-nums; }
+.reference { margin-top: 16px; display: flex; gap: 14px; align-items: center; }
+.reference img { width: 74px; height: 74px; object-fit: cover; border-radius: 9px; background: #0b0d0d; border: 1px solid var(--line); }
+.reference p + p { margin-top: 6px; }
+.muted { color: var(--muted); font-size: .8rem; line-height: 1.45; }
+.trial-panel, .log-panel { margin-top: 16px; }
+.trial-config { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 10px; align-items: end; }
+label { display: grid; gap: 7px; color: var(--muted); font-size: .72rem; }
+select { width: 100%; background: #242a27; color: var(--muted); border-color: var(--line); }
+.hold-track { height: 11px; background: #0e1110; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin-top: 20px; }
+.hold-progress { height: 100%; width: 0; background: var(--accent); transition: width 70ms linear; }
+.trial-metrics { display: flex; gap: 24px; margin-top: 17px; color: var(--muted); font-size: .78rem; }
+.trial-metrics strong { color: #f4f0e8; font-size: .95rem; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+th, td { text-align: left; padding: 12px 8px; border-top: 1px solid var(--line); }
+th { color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; }
+footer { color: #6f7973; font-size: .7rem; margin-top: 22px; }
+@media (max-width: 760px) {
+  .shell { padding-top: 28px; }
+  .two-col, .trial-config { grid-template-columns: 1fr 1fr; }
+  .trial-config button { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .two-col, .trial-config { grid-template-columns: 1fr; }
+  .trial-metrics { flex-wrap: wrap; gap: 10px 18px; }
+}
+
+    </style>
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+      body { position: fixed; inset: 0; height: 100vh; height: 100dvh; }
+      body .shell { position: absolute; width: 1100px; margin: 0; padding: 20px; transform-origin: top left; }
+      .shell .two-col { grid-template-columns: 1.1fr .9fr; }
+      .shell .trial-config { grid-template-columns: repeat(4,minmax(0,1fr)) auto; }
+      .shell .table-wrap { overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <p class="eyebrow">Throwaway feasibility probe</p>
+        <h1>Webcam seal check</h1>
+        <p class="lede">A small diagnostic surface for testing real hand landmark inference before building the game.</p>
+      </header>
+
+      <section class="notice" aria-label="Scope">
+        <strong>Scope</strong>
+        <span>Nothing is recorded or uploaded. The camera is used only while Start is active.</span>
+      </section>
+
+      <section class="grid two-col">
+        <article class="panel camera-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">01 / camera</p>
+              <h2>Live diagnostic</h2>
+            </div>
+            <span id="camera-status" class="status" data-tone="neutral">Stopped</span>
+          </div>
+          <div class="video-wrap">
+            <video id="camera" autoplay muted playsinline aria-label="Live camera preview"></video>
+            <div id="video-placeholder" class="video-placeholder">Load the model, then allow camera access.</div>
+          </div>
+          <div class="actions">
+            <button id="load-model" type="button">Load model</button>
+            <button id="start-camera" type="button" disabled>Start camera</button>
+            <button id="stop-camera" type="button" class="quiet" disabled>Stop</button>
+          </div>
+          <p id="model-status" class="status-line" role="status">Model not loaded.</p>
+          <p id="error-status" class="error-line" role="alert" hidden></p>
+        </article>
+
+        <article class="panel readout-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">02 / signal</p>
+              <h2>Recognition readout</h2>
+            </div>
+            <span id="inference-latency" class="metric">— ms</span>
+          </div>
+          <dl class="readout">
+            <div><dt>Prediction</dt><dd id="prediction">—</dd></div>
+            <div><dt>Score</dt><dd id="prediction-score">—</dd></div>
+            <div><dt>Hands</dt><dd id="hand-count">0</dd></div>
+            <div><dt>Recent labels</dt><dd id="recent-labels">—</dd></div>
+          </dl>
+          <div class="reference">
+            <img id="seal-reference" alt="Reference seal" />
+            <div>
+              <p class="eyebrow">Pose reference</p>
+              <p id="reference-name">Choose a target below.</p>
+              <p class="muted">Keep the full hand in frame. The preview is mirrored for comfort; detection uses the raw video.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel trial-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">03 / trial</p>
+            <h2>Hold and sequence check</h2>
+          </div>
+          <span id="trial-status" class="status" data-tone="neutral">Idle</span>
+        </div>
+        <div class="trial-config">
+          <label>Target seal
+            <select id="target-seal"></select>
+          </label>
+          <label>Sequence 1
+            <select class="sequence-choice"></select>
+          </label>
+          <label>Sequence 2
+            <select class="sequence-choice"></select>
+          </label>
+          <label>Sequence 3
+            <select class="sequence-choice"></select>
+          </label>
+          <button id="start-single-trial" type="button" class="quiet" disabled>Start single-sign trial</button>
+          <button id="start-trial" type="button" disabled>Start sequence trial</button>
+        </div>
+        <div class="hold-track" aria-label="Hold progress">
+          <div id="hold-progress" class="hold-progress"></div>
+        </div>
+        <p id="hold-status" class="status-line">Hold the active seal for about 350 ms.</p>
+        <div class="trial-metrics">
+          <span>Successes <strong id="success-count">0</strong></span>
+          <span>Elapsed <strong id="trial-elapsed">—</strong></span>
+          <span>Timeout <strong>15 s</strong></span>
+        </div>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">04 / log</p>
+            <h2>Trial results</h2>
+          </div>
+          <button id="export-log" type="button" class="quiet">Export JSON</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sequence</th><th>Result</th><th>Elapsed</th><th>Mean inference</th></tr></thead>
+            <tbody id="trial-log"><tr><td colspan="4" class="muted">No trials yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>Source model: Jutsu Hero seal classifier · Browser-only probe · No persistence</footer>
+    </main>
+    <script>
+const LABELS = [
+  'rat',
+  'ox',
+  'tiger',
+  'hare',
+  'dragon',
+  'serpent',
+  'horse',
+  'ram',
+  'monkey',
+  'bird',
+  'dog',
+  'boar',
+];
+
+const HAND_SIZE = 21;
+const VALUES_PER_HAND = HAND_SIZE * 2;
+const CONFIDENCE_THRESHOLD = 0.6;
+
+function unwrapHand(hand) {
+  return Array.isArray(hand) ? hand : hand?.landmarks;
+}
+
+function handName(hand) {
+  return String(hand?.handedness ?? hand?.categoryName ?? '').toLowerCase();
+}
+
+function distance(a, b) {
+  return Math.hypot((b?.x ?? 0) - (a?.x ?? 0), (b?.y ?? 0) - (a?.y ?? 0));
+}
+
+function normalizeHand(hand) {
+  const points = unwrapHand(hand);
+  if (!Array.isArray(points) || points.length < HAND_SIZE) {
+    return new Array(VALUES_PER_HAND).fill(0);
+  }
+
+  const wrist = points[0];
+  const scale = distance(wrist, points[9]) || 1;
+  const values = [];
+  for (let index = 0; index < HAND_SIZE; index += 1) {
+    values.push((points[index].x - wrist.x) / scale, (points[index].y - wrist.y) / scale);
+  }
+  return values;
+}
+
+function orderHands(hands) {
+  const usable = (hands ?? []).filter((hand) => Array.isArray(unwrapHand(hand)));
+  const left = usable.find((hand) => handName(hand).includes('left'));
+  const right = usable.find((hand) => handName(hand).includes('right'));
+  if (left && right && left !== right) return [left, right];
+  return usable.slice(0, 2).sort((a, b) => (unwrapHand(a)[0]?.x ?? 0) - (unwrapHand(b)[0]?.x ?? 0));
+}
+
+function buildTensor(hands = []) {
+  const ordered = orderHands(hands);
+  return [...normalizeHand(ordered[0]), ...normalizeHand(ordered[1])];
+}
+
+function classifyScores(scores, threshold = CONFIDENCE_THRESHOLD) {
+  if (!scores || typeof scores.length !== 'number' || scores.length === 0) return null;
+  let index = 0;
+  for (let candidate = 1; candidate < scores.length; candidate += 1) {
+    if (scores[candidate] > scores[index]) index = candidate;
+  }
+  const score = Number(scores[index]);
+  const label = LABELS[index];
+  return label && score >= threshold ? { label, score, index } : null;
+}
+
+function majorityLabel(labels) {
+  const counts = new Map();
+  for (const label of labels ?? []) {
+    if (label) counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  let winner = null;
+  let best = 0;
+  for (const label of labels ?? []) {
+    const count = counts.get(label) ?? 0;
+    if (count >= best && count > 0) {
+      winner = label;
+      best = count;
+    }
+  }
+  return winner;
+}
+
+function advanceHold(state, { label, score = 0, now, target, durationMs = 350 }) {
+  const valid = label === target && score >= CONFIDENCE_THRESHOLD;
+  if (!valid) return { label: null, startedAt: null, progress: 0, completed: false };
+  const startedAt = state.startedAt ?? now;
+  const progress = Math.min(1, Math.max(0, (now - startedAt) / durationMs));
+  return { label: target, startedAt, progress, completed: progress >= 1 };
+}
+
+function advanceSequence(state, label, sequence) {
+  if (state.completed || label !== sequence[state.index]) return state;
+  const index = state.index + 1;
+  return {
+    index,
+    successes: index === sequence.length ? state.successes + 1 : state.successes,
+    completed: index === sequence.length,
+  };
+}
+
+function createTrialLog({ id, sequence, startedAt, endedAt, success, inferenceMs }) {
+  return {
+    id,
+    sequence: [...sequence],
+    startedAt,
+    endedAt,
+    elapsedMs: endedAt - startedAt,
+    success: Boolean(success),
+    inferenceMs: [...inferenceMs],
+  };
+}
+
+const MODEL_URL = 'https://raw.githubusercontent.com/bunkerapps/Jutsu-Hero/10c5a914f9f14b4427d988d253048bf0fae8eb52/public/assets/seal_classifier.onnx';
+const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
+const REFERENCE_BASE = 'https://raw.githubusercontent.com/bunkerapps/Jutsu-Hero/10c5a914f9f14b4427d988d253048bf0fae8eb52/public/assets/art/seals/';
+const REFERENCE_FILES = { rat: 'Ne.jpg', ox: 'Ushi.jpg', tiger: 'Tora.jpg', hare: 'U.jpg', dragon: 'Tatsu.jpg', serpent: 'Mi.jpg', horse: 'Uma.jpg', ram: 'Hitsuji.jpg', monkey: 'Saru.jpg', bird: 'Tori.jpg', dog: 'Inu.jpg', boar: 'I.jpg' };
+const TRIAL_TIMEOUT_MS = 15000;
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  camera: $('camera'), cameraStatus: $('camera-status'), videoWrap: document.querySelector('.video-wrap'),
+  videoPlaceholder: $('video-placeholder'), loadModel: $('load-model'), startCamera: $('start-camera'), stopCamera: $('stop-camera'),
+  modelStatus: $('model-status'), errorStatus: $('error-status'), prediction: $('prediction'), predictionScore: $('prediction-score'),
+  handCount: $('hand-count'), recentLabels: $('recent-labels'), latency: $('inference-latency'), reference: $('seal-reference'), referenceName: $('reference-name'),
+  target: $('target-seal'), choices: [...document.querySelectorAll('.sequence-choice')], startTrial: $('start-trial'), startSingleTrial: $('start-single-trial'), trialStatus: $('trial-status'),
+  holdProgress: $('hold-progress'), holdStatus: $('hold-status'), successCount: $('success-count'), elapsed: $('trial-elapsed'), log: $('trial-log'), exportLog: $('export-log'),
+};
+
+let ort;
+let handLandmarker;
+let stream;
+let frameHandle;
+let lastVideoTime = -1;
+let processing = false;
+let processingGeneration = 0;
+let recent = [];
+let hold = { label: null, startedAt: null, progress: 0, completed: false };
+let trial = null;
+let successCount = 0;
+const logs = [];
+
+function showError(message) {
+  els.errorStatus.hidden = !message;
+  els.errorStatus.textContent = message || '';
+}
+
+function setStatus(element, text, tone = 'neutral') {
+  element.textContent = text;
+  element.dataset.tone = tone;
+}
+
+function populateSelect(select, selected) {
+  select.replaceChildren(...LABELS.map((label) => {
+    const option = new Option(label, label);
+    option.selected = label === selected;
+    return option;
+  }));
+}
+
+function updateReference(label) {
+  els.reference.src = `${REFERENCE_BASE}${encodeURIComponent(REFERENCE_FILES[label])}`;
+  els.reference.alt = `${label} seal reference`;
+  els.referenceName.textContent = label[0].toUpperCase() + label.slice(1);
+}
+
+function resetReadout() {
+  els.prediction.textContent = '—';
+  els.predictionScore.textContent = '—';
+  els.handCount.textContent = '0';
+  els.recentLabels.textContent = '—';
+  els.latency.textContent = '— ms';
+  els.holdProgress.style.width = '0%';
+}
+
+async function loadModel() {
+  els.loadModel.disabled = true;
+  showError('');
+  els.modelStatus.textContent = 'Loading browser libraries and model…';
+  try {
+    const [{ FilesetResolver, HandLandmarker }, onnx] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/+esm'),
+      import('https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/+esm'),
+    ]);
+    ort = onnx;
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/';
+    ort.env.wasm.numThreads = 1;
+    const vision = await FilesetResolver.forVisionTasks(WASM_URL);
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' },
+      runningMode: 'VIDEO', numHands: 4, minHandDetectionConfidence: 0.5, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+    });
+    const response = await fetch(MODEL_URL);
+    if (!response.ok) throw new Error(`Seal classifier request failed (${response.status}).`);
+    const modelBuffer = await response.arrayBuffer();
+    const session = await ort.InferenceSession.create(modelBuffer, { executionProviders: ['wasm'] });
+    handLandmarker.__sealSession = session;
+    els.modelStatus.textContent = 'Model loaded. Camera permission is still required to start.';
+    els.startCamera.disabled = false;
+    els.startTrial.disabled = false;
+    els.startSingleTrial.disabled = false;
+    setStatus(els.cameraStatus, 'Ready', 'good');
+  } catch (error) {
+    els.loadModel.disabled = false;
+    els.modelStatus.textContent = 'Model did not load.';
+    showError(`Could not load the model: ${error.message}`);
+  }
+}
+
+async function startCamera() {
+  if (!handLandmarker) return;
+  showError('');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    els.camera.srcObject = stream;
+    await els.camera.play();
+    els.videoWrap.classList.add('is-live');
+    processingGeneration += 1;
+    els.startCamera.disabled = true;
+    els.stopCamera.disabled = false;
+    setStatus(els.cameraStatus, 'Running', 'good');
+    frameHandle = requestAnimationFrame(processFrame);
+  } catch (error) {
+    showError(`Camera could not start: ${error.message}`);
+    setStatus(els.cameraStatus, 'Camera error', 'bad');
+  }
+}
+
+function stopCamera() {
+  processingGeneration += 1;
+  if (frameHandle) cancelAnimationFrame(frameHandle);
+  frameHandle = undefined;
+  stream?.getTracks().forEach((track) => track.stop());
+  stream = undefined;
+  els.camera.srcObject = null;
+  els.videoWrap.classList.remove('is-live');
+  els.startCamera.disabled = !handLandmarker;
+  els.stopCamera.disabled = true;
+  setStatus(els.cameraStatus, 'Stopped', 'neutral');
+  resetReadout();
+  recent = [];
+  hold = { label: null, startedAt: null, progress: 0, completed: false };
+  if (trial) finishTrial(false, 'Stopped');
+}
+
+function resultHands(result) {
+  return (result.landmarks ?? []).map((landmarks, index) => ({
+    landmarks,
+    handedness: result.handednesses?.[index]?.[0]?.categoryName ?? '',
+  }));
+}
+
+async function runClassifier(tensor) {
+  const inputName = handLandmarker.__sealSession.inputNames[0];
+  const outputName = handLandmarker.__sealSession.outputNames[0];
+  const input = new ort.Tensor('float32', Float32Array.from(tensor), [1, 84]);
+  const output = await handLandmarker.__sealSession.run({ [inputName]: input });
+  return classifyScores(output[outputName].data);
+}
+
+function updateTrial(label, score, now) {
+  if (!trial) return;
+  if (now - trial.startedAt >= TRIAL_TIMEOUT_MS) {
+    finishTrial(false, 'Timed out');
+    return;
+  }
+  hold = advanceHold(hold, { label, score, now, target: trial.sequence[trial.sequenceState.index] });
+  els.holdProgress.style.width = `${Math.round(hold.progress * 100)}%`;
+  els.holdStatus.textContent = `Hold ${trial.sequence[trial.sequenceState.index]} · ${Math.round(hold.progress * 100)}%`;
+  if (hold.completed) {
+    trial.sequenceState = advanceSequence(trial.sequenceState, trial.sequence[trial.sequenceState.index], trial.sequence);
+    if (trial.sequenceState.completed) finishTrial(true, 'Sequence complete');
+    else {
+      hold = { label: null, startedAt: null, progress: 0, completed: false };
+      updateReference(trial.sequence[trial.sequenceState.index]);
+      els.holdStatus.textContent = `Hold ${trial.sequence[trial.sequenceState.index]} for about 350 ms.`;
+    }
+  }
+}
+
+function processFrame(now) {
+  if (!stream || !handLandmarker || els.camera.readyState < 2) {
+    frameHandle = requestAnimationFrame(processFrame);
+    return;
+  }
+  if (!processing && els.camera.currentTime !== lastVideoTime) {
+    lastVideoTime = els.camera.currentTime;
+    const result = handLandmarker.detectForVideo(els.camera, now);
+    const hands = resultHands(result);
+    if (!hands.length) {
+      recent = [];
+      hold = advanceHold(hold, { label: null, score: 0, now, target: trial?.sequence[trial.sequenceState.index] });
+      els.prediction.textContent = 'No hand detected';
+      els.predictionScore.textContent = '—';
+      els.handCount.textContent = '0';
+      els.recentLabels.textContent = '—';
+      els.latency.textContent = '— ms';
+      els.holdProgress.style.width = '0%';
+      frameHandle = requestAnimationFrame(processFrame);
+      return;
+    }
+    const started = performance.now();
+    const generation = processingGeneration;
+    const trialAtInference = trial;
+    const trialIdAtInference = trialAtInference?.id;
+    processing = true;
+    runClassifier(buildTensor(hands)).then((prediction) => {
+      if (generation !== processingGeneration || !stream) return;
+      const latency = performance.now() - started;
+      const label = prediction?.label ?? null;
+      recent = [...recent, label].slice(-3);
+      els.prediction.textContent = label ?? 'No confident label';
+      els.predictionScore.textContent = prediction ? prediction.score.toFixed(3) : '—';
+      els.handCount.textContent = String(hands.length);
+      els.recentLabels.textContent = recent.map((value) => value ?? '—').join(' · ');
+      els.latency.textContent = `${latency.toFixed(1)} ms`;
+      if (trialAtInference && trial?.id === trialIdAtInference && now >= trial.startedAt) {
+        trial.inferenceMs.push(latency);
+        updateTrial(label, prediction?.score ?? 0, now);
+      }
+    }).catch((error) => {
+      if (generation === processingGeneration) showError(`Inference failed: ${error.message}`);
+    }).finally(() => {
+      processing = false;
+      if (stream && generation === processingGeneration) frameHandle = requestAnimationFrame(processFrame);
+    });
+    return;
+  }
+  frameHandle = requestAnimationFrame(processFrame);
+}
+
+function startTrial(sequence = els.choices.map((choice) => choice.value)) {
+  if (!stream) {
+    showError('Start the camera before starting a trial.');
+    return;
+  }
+  if (trial) finishTrial(false, 'Restarted');
+  trial = { id: `trial-${Date.now()}`, sequence, startedAt: performance.now(), sequenceState: { index: 0, successes: 0, completed: false }, inferenceMs: [] };
+  const trialId = trial.id;
+  trial.timeoutHandle = window.setTimeout(() => {
+    if (trial?.id === trialId) finishTrial(false, 'Timed out');
+  }, TRIAL_TIMEOUT_MS);
+  hold = { label: null, startedAt: null, progress: 0, completed: false };
+  updateReference(sequence[0]);
+  setStatus(els.trialStatus, 'Running', 'good');
+  els.holdStatus.textContent = `Hold ${sequence[0]} for about 350 ms.`;
+  els.elapsed.textContent = '0 ms';
+}
+
+function finishTrial(success, reason) {
+  if (!trial) return;
+  window.clearTimeout(trial.timeoutHandle);
+  const endedAt = performance.now();
+  const record = createTrialLog({ id: trial.id, sequence: trial.sequence, startedAt: trial.startedAt, endedAt, success, inferenceMs: trial.inferenceMs });
+  logs.push(record);
+  successCount += success ? 1 : 0;
+  els.successCount.textContent = String(successCount);
+  els.elapsed.textContent = `${Math.round(record.elapsedMs)} ms`;
+  els.holdProgress.style.width = success ? '100%' : '0%';
+  els.holdStatus.textContent = `${reason}.`;
+  setStatus(els.trialStatus, success ? 'Success' : 'Ended', success ? 'good' : 'bad');
+  trial = null;
+  renderLog();
+}
+
+function renderLog() {
+  if (!logs.length) return;
+  els.log.replaceChildren(...logs.map((record) => {
+    const row = document.createElement('tr');
+    const mean = record.inferenceMs.length ? record.inferenceMs.reduce((sum, value) => sum + value, 0) / record.inferenceMs.length : 0;
+    row.innerHTML = `<td>${record.sequence.join(' → ')}</td><td>${record.success ? 'Success' : 'Timeout / stopped'}</td><td>${Math.round(record.elapsedMs)} ms</td><td>${mean.toFixed(1)} ms</td>`;
+    return row;
+  }));
+}
+
+function exportLog() {
+  const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'seal-probe-trials.json';
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+populateSelect(els.target, 'rat');
+els.choices.forEach((choice, index) => populateSelect(choice, ['rat', 'ox', 'tiger'][index]));
+updateReference(els.target.value);
+els.target.addEventListener('change', () => {
+  updateReference(els.target.value);
+  if (!trial) els.choices[0].value = els.target.value;
+});
+els.loadModel.addEventListener('click', loadModel);
+els.startCamera.addEventListener('click', startCamera);
+els.stopCamera.addEventListener('click', stopCamera);
+els.startTrial.addEventListener('click', () => startTrial());
+els.startSingleTrial.addEventListener('click', () => startTrial([els.target.value]));
+els.exportLog.addEventListener('click', exportLog);
+
+    </script>
+    <script>
+      // The original diagnostics remain available as a fitted, non-scrolling screen.
+      const diagnosticScreen = document.querySelector('.shell');
+      function fitDiagnostics() {
+        const width = document.body.clientWidth;
+        const height = document.body.clientHeight;
+        const scale = Math.min(width / 1100, height / diagnosticScreen.offsetHeight);
+        diagnosticScreen.style.transform = `scale(${scale})`;
+        diagnosticScreen.style.left = `${(width - 1100 * scale) / 2}px`;
+        diagnosticScreen.style.top = `${(height - diagnosticScreen.offsetHeight * scale) / 2}px`;
+      }
+      new ResizeObserver(fitDiagnostics).observe(diagnosticScreen);
+      window.addEventListener('resize', fitDiagnostics);
+      fitDiagnostics();
+    </script>
+  </body>
+</html>

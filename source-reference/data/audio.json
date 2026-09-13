@@ -1,0 +1,8 @@
+{
+  "homepageMusic": {
+    "src": "./assets/audio/homepage.mp3",
+    "volume": 0.35,
+    "loop": true,
+    "autoplay": true
+  }
+}

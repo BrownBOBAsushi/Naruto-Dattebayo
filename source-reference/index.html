@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#192323"><title>Dattebayo · Ninja Academy</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<main class="game-screen">
+  <section id="home" class="home" aria-labelledby="home-title">
+    <a class="brand" href="#home">DATTE<span>BAYO</span><b>忍</b></a>
+    <button id="music-toggle" class="quiet music-toggle" aria-pressed="false">Music pending audio</button>
+    <div class="home-title"><p>NINJA ACADEMY</p><h1 id="home-title">DATTE<span>BAYO!</span></h1><span class="home-subtitle">Choose your ninja way.</span></div>
+    <nav class="mode-list" aria-label="Game modes">
+      <button class="mode" disabled><strong>Single Player</strong><small>Coming soon</small></button>
+      <button class="mode" disabled><strong>Multi Player</strong><small>Coming soon</small></button>
+      <button class="mode" disabled><strong>Survival Mode</strong><small>Coming soon</small></button>
+      <a href="#practice" class="mode available"><strong>Practice Mode</strong><span aria-hidden="true">→</span></a>
+    </nav>
+    <p class="home-footer">HIDDEN LEAF VILLAGE · TRAINING GROUNDS</p>
+  </section>
+  <section id="practice" class="practice" hidden aria-label="Practice Mode">
+    <section class="camera-panel" aria-label="Your camera">
+      <div class="camera-wrap">
+        <video id="camera" autoplay muted playsinline aria-label="Your camera, mirrored"></video>
+        <div id="camera-placeholder"><strong>Practice Mode</strong><p>Keep both hands in view.</p><button id="enable-camera" class="primary">Retry camera</button></div>
+      </div>
+      <div class="camera-toolbar"><a href="#home" class="back">← Home</a><span id="camera-status">Camera off</span><label class="jutsu-picker"><span class="sr-only">Select jutsu</span><select id="jutsu"><option value="chidori">Chidori</option><option value="fireball">Fireball Jutsu</option></select></label></div>
+      <div class="camera-feedback"><p id="camera-message" role="status">Camera stays in your browser. Nothing is recorded.</p><p id="error" class="error" role="alert" hidden></p></div>
+      <div class="live-overlay" hidden id="live-overlay"><span id="prediction">Show a hand sign</span><button id="stop-camera" class="quiet">Stop camera</button></div>
+    </section>
+    <section class="sequence-panel" aria-label="Three hand signs, from left to right">
+      <h2 id="jutsu-name" class="sr-only">Chidori</h2><span id="sequence-count" class="sr-only">0 / 3 complete</span>
+      <ol id="signs" class="signs"></ol>
+    </section>
+    <section class="character-panel" aria-label="Your shinobi">
+      <div id="arena" class="arena">
+        <div class="arena-toolbar"><div class="character-options" role="group" aria-label="Select your character"><button data-character="naruto" aria-pressed="false">Naruto</button><button data-character="sasuke" aria-pressed="true">Sasuke</button></div><button class="quiet" id="sound-toggle" aria-pressed="false">Enable sound</button></div>
+        <div class="arena-caption"><p id="character-name">SASUKE UCHIHA</p><h2 id="action-label">Ready to train.</h2><p id="action-hint" class="sr-only">Complete all three signs to release your jutsu.</p></div>
+        <div class="sprite-space"><img id="sprite" alt="Sasuke in a ready stance"><div id="jutsu-effect" class="jutsu-effect" aria-hidden="true"></div></div>
+        <div class="arena-footer"><p id="instruction" role="status">Starting your camera…</p><span id="sound-status" role="status"></span><span id="completed-count">0 jutsu performed</span></div>
+      </div>
+    </section>
+  </section>
+</main>
+<script type="module" src="./src/practice.js"></script>
+</body>
+</html>
