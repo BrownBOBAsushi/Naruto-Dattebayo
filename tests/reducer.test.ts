@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createInitialState,
   reduceBattle,
+  moveFromRandom,
   type BattleState,
   type Move,
 } from '../src/game/reducer';
@@ -25,6 +26,12 @@ function humanWinToCast(player: Move = 'rock', cpuRandom = 0.9): BattleState {
 }
 
 describe('battle reducer', () => {
+  it('maps the uniform random thirds at their boundaries', () => {
+    expect(moveFromRandom(0)).toBe('rock');
+    expect(moveFromRandom(1 / 3)).toBe('paper');
+    expect(moveFromRandom(2 / 3)).toBe('scissors');
+    expect(moveFromRandom(1)).toBe('scissors');
+  });
   it('samples and locks the CPU move before player choice', () => {
     const state = begin(0.34);
     expect(state.phase).toBe('choose');
@@ -84,9 +91,26 @@ describe('battle reducer', () => {
     state = choose(state, 'scissors');
     state = resolve(state);
     expect(state.phase).toBe('cpuAttack');
+    expect(state.playerHp).toBe(3);
     state = reduceBattle(state, { type: 'resolveAttack', generation: state.roundGeneration, random: 0.67 });
     expect(state.playerHp).toBe(2);
     expect(state.phase).toBe('choose');
+  });
+
+  it('cancelling a pending CPU attack deals zero damage, while resolve applies once', () => {
+    let pending = begin(0);
+    pending = resolve(choose(pending, 'scissors'));
+    const generation = pending.roundGeneration;
+    expect(pending).toMatchObject({ phase: 'cpuAttack', playerHp: 3, attackResolved: false });
+    const paused = reduceBattle(pending, { type: 'invalidate', generation });
+    expect(paused).toMatchObject({ phase: 'ready', playerHp: 3 });
+    expect(reduceBattle(paused, { type: 'resolveAttack', generation, random: 0.67 })).toEqual(paused);
+
+    let lethal = begin(0);
+    lethal = { ...resolve(choose(lethal, 'scissors')), playerHp: 1 };
+    const resolved = reduceBattle(lethal, { type: 'resolveAttack', generation: lethal.roundGeneration, random: 0.67 });
+    expect(resolved).toMatchObject({ phase: 'defeat', playerHp: 0 });
+    expect(reduceBattle(resolved, { type: 'resolveAttack', generation: resolved.roundGeneration, random: 0.67 })).toEqual(resolved);
   });
 
   it('alternates Fireball then Chidori only after successful human attacks', () => {
@@ -118,7 +142,7 @@ describe('battle reducer', () => {
     human = reduceBattle(human, { type: 'resolveAttack', generation: human.roundGeneration, random: .67 });
     expect(human.phase).toBe('victory');
     let cpu: BattleState = begin(0); cpu = { ...choose(cpu, 'scissors'), playerHp: 1 }; cpu = resolve(cpu);
-    expect(cpu.phase).toBe('cpuAttack'); expect(cpu.playerHp).toBe(0);
+    expect(cpu.phase).toBe('cpuAttack'); expect(cpu.playerHp).toBe(1);
     cpu = reduceBattle(cpu, { type: 'resolveAttack', generation: cpu.roundGeneration, random: .67 });
     expect(cpu.phase).toBe('defeat');
   });
@@ -133,22 +157,34 @@ describe('battle reducer', () => {
     for (let index = 0; index < 3; index += 1) state = reduceBattle(state, { type: 'signAccepted', generation: state.roundGeneration });
     state = reduceBattle(state, { type: 'invalidate', generation: state.roundGeneration });
     expect(state.phase).toBe('ready'); expect(state.cpuHp).toBe(2); expect(state.nextJutsu).toBe('chidori');
-    state = { ...state, phase: 'cpuAttack', playerHp: 0 as const, attackResolved: true };
+    state = { ...state, phase: 'cpuAttack', playerHp: 1 as const, attackResolved: false };
     const terminal = reduceBattle(state, { type: 'invalidate', generation: state.roundGeneration });
-    expect(terminal.phase).toBe('defeat');
+    expect(terminal.phase).toBe('ready'); expect(terminal.playerHp).toBe(1);
   });
 
   it('rejects stale generation events and terminal callbacks', () => {
     let state = begin(0.9);
     const stale = state.roundGeneration;
-    state = reduceBattle(state, { type: 'newRound', generation: stale, random: 0 });
+    state = reduceBattle(state, { type: 'invalidate', generation: stale });
     expect(state.roundGeneration).toBe(stale + 1);
     const before = state;
+    state = reduceBattle(state, { type: 'beginRound', generation: stale, random: 0 });
+    expect(state).toEqual(before);
     state = reduceBattle(state, { type: 'chooseMove', generation: stale, move: 'rock' });
     expect(state).toEqual(before);
     state = { ...state, phase: 'victory', cpuHp: 0 };
     const terminal = reduceBattle(state, { type: 'resolveAttack', generation: state.roundGeneration, random: 0.67 });
     expect(terminal).toEqual(state);
+  });
+
+  it('does not reroll a locked CPU move or escape an attack with beginRound', () => {
+    const locked = begin(0.1);
+    const reroll = reduceBattle(locked, { type: 'beginRound', generation: locked.roundGeneration, random: 0.9 });
+    expect(reroll).toEqual(locked);
+    let attack = humanWinToCast();
+    for (let index = 0; index < 3; index += 1) attack = reduceBattle(attack, { type: 'signAccepted', generation: attack.roundGeneration });
+    expect(attack.phase).toBe('humanAttack');
+    expect(reduceBattle(attack, { type: 'beginRound', generation: attack.roundGeneration, random: 0.9 })).toEqual(attack);
   });
 
   it('replay resets game state and advances generation', () => {

@@ -20,7 +20,6 @@ export interface BattleState {
 export type BattleAction =
   | { type: 'start'; generation: number }
   | { type: 'beginRound'; generation: number; random: number }
-  | { type: 'newRound'; generation: number; random: number }
   | { type: 'chooseMove'; generation: number; move: Move }
   | { type: 'resolveReveal'; generation: number; random: number }
   | { type: 'signAccepted'; generation: number }
@@ -97,9 +96,6 @@ export function reduceBattle(state: BattleState, action: BattleAction): BattleSt
     case 'beginRound':
       if (state.phase !== 'ready') return state;
       return firstRound(state, action.random);
-    case 'newRound':
-      if (!['retryTie', 'humanAttack', 'cpuAttack', 'choose'].includes(state.phase)) return state;
-      return freshRound(state, action.random);
     case 'chooseMove':
       if (state.phase !== 'choose' || !state.cpuMove) return state;
       return { ...state, phase: 'reveal', playerMove: action.move, outcome: null };
@@ -109,20 +105,24 @@ export function reduceBattle(state: BattleState, action: BattleAction): BattleSt
       if (outcome === 'secretEnding') return { ...applyDamage(state, 'both'), phase: 'secretEnding', outcome };
       if (outcome === 'normalTie') return { ...freshRound({ ...state, phase: 'retryTie' }, action.random), outcome };
       if (outcome === 'humanWin') return { ...state, phase: 'humanCast', outcome, pendingCast: true, acceptedSigns: 0, attackResolved: false };
-      return applyDamage({ ...state, phase: 'cpuAttack', outcome, pendingCast: false, acceptedSigns: 0, attackResolved: true }, 'player');
+      return { ...state, phase: 'cpuAttack', outcome, pendingCast: false, acceptedSigns: 0, attackResolved: false };
     }
     case 'signAccepted':
       if (state.phase !== 'humanCast' || !state.pendingCast || state.acceptedSigns >= 3) return state;
       if (state.acceptedSigns < 2) return { ...state, acceptedSigns: state.acceptedSigns + 1 };
       return applyDamage({ ...state, phase: 'humanAttack', acceptedSigns: 3, pendingCast: false, attackResolved: true }, 'cpu');
     case 'resolveAttack': {
-      if ((state.phase !== 'humanAttack' && state.phase !== 'cpuAttack') || !state.attackResolved) return state;
+      if ((state.phase !== 'humanAttack' && state.phase !== 'cpuAttack') || (state.phase === 'humanAttack' && !state.attackResolved)) return state;
       const human = state.phase === 'humanAttack';
       const playerHp = state.playerHp;
       const cpuHp = state.cpuHp;
       const nextJutsu = human ? (state.nextJutsu === 'fireball' ? 'chidori' : 'fireball') : state.nextJutsu;
       if (human && cpuHp === 0) return { ...state, phase: 'victory', outcome: 'humanWin', nextJutsu };
-      if (!human && playerHp === 0) return { ...state, phase: 'defeat', outcome: 'cpuWin', nextJutsu };
+      if (!human) {
+        const damaged = applyDamage(state, 'player');
+        if (damaged.playerHp === 0) return { ...damaged, phase: 'defeat', outcome: 'cpuWin', nextJutsu };
+        return freshRound({ ...damaged, nextJutsu }, action.random);
+      }
       return freshRound({ ...state, playerHp, cpuHp, nextJutsu }, action.random);
     }
     case 'cancelCast':
